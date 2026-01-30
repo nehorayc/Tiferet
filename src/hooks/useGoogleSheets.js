@@ -31,6 +31,18 @@ export const useGoogleSheets = () => {
             const messagesCsv = await messagesResponse.text();
             const messagesParsed = Papa.parse(messagesCsv, { header: true }).data;
 
+            // Fetch Azkarot
+            let azkarotData = [];
+            try {
+                const azkarotResponse = await fetch(getGvizUrl('Azkarot'));
+                if (azkarotResponse.ok) {
+                    const azkarotCsv = await azkarotResponse.text();
+                    azkarotData = Papa.parse(azkarotCsv, { header: true }).data;
+                }
+            } catch (e) {
+                console.warn('Azkarot sheet not found or inaccessible');
+            }
+
             const today = startOfDay(new Date());
 
             const filteredMessages = messagesParsed.filter(msg => {
@@ -53,7 +65,8 @@ export const useGoogleSheets = () => {
 
             setData({
                 settings: settingsMap,
-                messages: filteredMessages
+                messages: filteredMessages,
+                azkarot: azkarotData
             });
             setLoading(false);
         } catch (err) {

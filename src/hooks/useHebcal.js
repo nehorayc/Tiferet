@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { HDate, Location, Zmanim, HebrewCalendar } from '@hebcal/core';
+import { HDate, Location, Zmanim, HebrewCalendar, Locale } from '@hebcal/core';
 
 // Default to Jerusalem
 const JERUSALEM = new Location(31.7683, 35.2137, false, 'Asia/Jerusalem', 'Jerusalem', 'IL', 281184);
@@ -86,6 +86,8 @@ export const useHebcal = () => {
             setZmanim(zmanimData);
             setHebrewDate({
                 hebrew: hdate.renderGematriya(),
+                monthName: Locale.gettext(hdate.getMonthName(), 'he'), // Hebrew month name (e.g. שבט)
+                isLeapYear: hdate.isLeapYear(),
                 gd: now.toDateString() // Placeholder
             });
             setShabbatInfo({

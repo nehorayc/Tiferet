@@ -6,8 +6,11 @@ import { Carousel } from './components/Carousel';
 import { Header } from './components/Header'; // New Header
 import { Loader2 } from 'lucide-react';
 
-import bgImage from './assets/royal_bg_v3.png';
+import bgImage from './assets/bg_synagogue.png';
 
+
+import { AzkarotSidebar } from './components/AzkarotSidebar';
+import { Ticker } from './components/Ticker';
 
 function App() {
   const { data, loading: sheetLoading, error } = useGoogleSheets();
@@ -17,7 +20,7 @@ function App() {
     return parseInt(data.settings?.SlideDuration) || 15;
   }, [data.settings?.SlideDuration]);
 
-  const shulName = data.settings?.ShulName || 'בית כנסת';
+  const shulName = data.settings?.ShulName || 'תפארת ישראל';
 
   // Combine loading states slightly or just show sheet loading which is critical
   if (sheetLoading) {
@@ -46,42 +49,35 @@ function App() {
     <div
       style={{
         display: 'flex',
-        flexDirection: 'column', // Vertical layout first (Header -> Content)
+        flexDirection: 'column',
         height: '100vh',
         width: '100vw',
         overflow: 'hidden',
         direction: 'rtl',
         backgroundImage: `url(${bgImage})`,
-        backgroundSize: 'cover',
+        backgroundSize: '100% 100%',
         backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundColor: '#0f172a'
+        backgroundRepeat: 'no-repeat'
       }}
-
     >
+      <Header shulName={shulName} shabbatInfo={shabbatInfo} hebrewDate={hebrewDate} />
 
-      {/* Top Header Bar (Full Width) */}
-      <Header shulName={shulName} shabbatInfo={shabbatInfo} />
+      {/* Main Body Area: Flex Row [Azkarot(R) | Carousel(C) | Zmanim(L)] */}
+      <div className="flex flex-1 overflow-hidden relative" style={{ backgroundColor: 'transparent' }}>
+        {/* 1. Azkarot Sidebar (Right) */}
+        <AzkarotSidebar azkarot={data.azkarot} hebrewDate={hebrewDate} loading={sheetLoading} />
 
-      {/* Main Body Area: Flex Row [Sidebar | Content] */}
-      <div className="flex flex-1 overflow-hidden relative">
-
-        {/* Main Content (Carousel) on Right (RTL: First child is Right) */}
-        {/* Wait, in RTL Flex Row: First child is Right side. Content should be on Right. Sidebar on Left. */}
-        {/* Wait, user said "Right side with messages is still blue". So Content is Right. */}
-        {/* App.jsx usually had main then sidebar. */}
-        {/* <main> was 1st child. <aside> was 2nd child. */}
-        {/* In RTL: 1st child is Right. 2nd child is Left. */}
-        {/* So Main is Right, Side is Left. */}
-
-        <main style={{ flex: 1, position: 'relative' }}>
+        {/* 2. Main Carousel (Center) - Expanded */}
+        <main className="flex-[2] flex items-center justify-center relative p-4">
           <Carousel messages={data.messages} duration={slideDuration} />
         </main>
 
+        {/* 3. Zmanim Sidebar (Left) */}
         <Sidebar zmanim={zmanim} hebrewDate={hebrewDate} loading={hebcalLoading} />
-
       </div>
 
+      {/* 4. Scrolling News Ticker (Bottom) */}
+      <Ticker messages={data.messages} />
     </div>
   );
 }

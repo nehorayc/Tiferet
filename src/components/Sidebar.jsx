@@ -24,47 +24,32 @@ const ZMAN_ICONS = {
 };
 
 export const Sidebar = ({ zmanim, hebrewDate, loading }) => {
-    const [time, setTime] = useState(new Date());
     const scrollContainerRef = React.useRef(null);
 
-    useEffect(() => {
-        const timer = setInterval(() => setTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-
-    // Auto-scroll logic for Zmanim
+    // Auto-scroll logic for Zmanim (One-direction Loop)
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
 
         let scrollAmount = 0;
-        let direction = 1;
         const speed = 0.5; // Pixels per tick
 
         const scrollInterval = setInterval(() => {
+            // If content fits, no need to scroll
             if (container.scrollHeight <= container.clientHeight) return;
 
-            scrollAmount += speed * direction;
-            container.scrollTop = scrollAmount;
+            scrollAmount += speed;
 
+            // If reached the bottom, reset to top
             if (scrollAmount >= (container.scrollHeight - container.clientHeight)) {
-                direction = -1;
-            } else if (scrollAmount <= 0) {
-                direction = 1;
+                scrollAmount = 0;
             }
+
+            container.scrollTop = scrollAmount;
         }, 50);
 
         return () => clearInterval(scrollInterval);
     }, [zmanim]);
-
-    const formatTime = (date) => {
-        return date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    };
-
-    const formatDate = (date) => {
-        return date.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    };
 
     const parseHebcalTime = (timeStr) => {
         if (!timeStr) return '';
@@ -73,55 +58,53 @@ export const Sidebar = ({ zmanim, hebrewDate, loading }) => {
     };
 
     return (
-        <aside style={{ width: '25%', height: '100%', backgroundColor: 'rgba(5, 10, 20, 0.65)', borderLeft: '3px double #d4af37', display: 'flex', flexDirection: 'column', padding: '1.5rem', overflow: 'hidden', backdropFilter: 'blur(12px)', boxShadow: '-5px 0 30px rgba(0,0,0,0.8)' }}>
+        <aside style={{ width: '30%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: 'transparent' }}>
+            <div className="relative z-10 flex flex-col h-full p-8">
 
-            {/* Clock Section */}
-            <div className="text-center mb-6 border-b-2 border-slate-600/50 pb-6 shrink-0">
-                <div className="text-7xl font-bold font-serif tracking-widest text-[#d4af37] drop-shadow-md mb-2" style={{ fontFamily: '"Frank Ruhl Libre", serif' }}>
-                    {formatTime(time)}
-                </div>
-                <div className="text-2xl text-slate-300 font-light">
-                    {formatDate(time)}
-                </div>
-                <div className="text-3xl font-bold text-white mt-3 bg-blue-900/50 py-2 rounded-lg border border-blue-800 shadow-md">
-                    {hebrewDate?.hebrew || 'טוען תאריך עברי...'}
-                </div>
-            </div>
+                {/* Zmanim List */}
+                <div className="flex-1 overflow-hidden relative" ref={scrollContainerRef}>
+                    <h3 className="text-3xl font-bold text-[#d4af37] mb-6 text-center border-b border-[#d4af37]/50 pb-4 flex items-center justify-center gap-3 sticky top-0 z-10 py-2"
+                        // Add a slight background to the header so it stands out over scrolling cards if needed, or keep transparent. 
+                        // User requested floating cards, header can be one too or separate. Let's make header separate but clear.
+                        style={{ backgroundColor: 'rgba(20, 20, 40, 0.95)', borderRadius: '8px', marginBottom: '16px' }}
+                    >
+                        <Clock size={32} />
+                        <span>זמני היום</span>
+                    </h3>
 
-            {/* Zmanim List */}
+                    {loading && !hebrewDate?.hebrew ? (
+                        <div className="text-[#d4af37]/60 animate-pulse text-center font-serif italic text-2xl">טוען זמנים...</div>
+                    ) : (
+                        <div className="space-y-2 pb-4">
+                            {Object.entries(ZMANIM_LABELS).map(([key, label]) => {
+                                if (!zmanim?.[key]) return null;
+                                const Icon = ZMAN_ICONS[key] || null;
 
-            <div className="flex-1 overflow-hidden relative" ref={scrollContainerRef}>
-                <h3 className="text-2xl font-bold text-[#d4af37] mb-4 text-center border-b border-[#d4af37] pb-2 flex items-center justify-center gap-2 sticky top-0 bg-[#0a0f1e]/95 z-10 py-2">
-                    <Clock size={24} />
-                    <span>זמני היום</span>
-                </h3>
-
-                {loading && !hebrewDate?.hebrew ? (
-                    <div className="text-slate-500 animate-pulse text-center">טוען זמנים...</div>
-                ) : (
-                    <div className="space-y-3 pb-4">
-                        {Object.entries(ZMANIM_LABELS).map(([key, label]) => {
-                            if (!zmanim?.[key]) return null;
-                            const Icon = ZMAN_ICONS[key] || null;
-
-                            return (
-                                <div key={key} className="flex justify-between items-center bg-slate-800/60 p-3 rounded border border-slate-700 hover:border-[#d4af37] transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        {Icon && <Icon size={20} className="text-[#d4af37]" />}
-                                        <span className="text-xl text-slate-200">{label}</span>
+                                return (
+                                    <div key={key} className="flex justify-between items-center p-5 border border-white/5 hover:border-[#d4af37]/60 transition-all duration-300"
+                                        style={{
+                                            backgroundColor: 'rgba(20, 20, 40, 0.9)',
+                                            borderRadius: '8px',
+                                            marginBottom: '6px'
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            {Icon && <Icon size={28} className="text-[#d4af37]" />}
+                                            <span className="text-2xl text-slate-100 font-serif font-normal">{label}</span>
+                                        </div>
+                                        <span className="text-4xl font-bold text-white font-mono drop-shadow-md">
+                                            {parseHebcalTime(zmanim[key])}
+                                        </span>
                                     </div>
-                                    <span className="text-2xl font-bold text-white font-mono">
-                                        {parseHebcalTime(zmanim[key])}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
 
-            <div className="mt-4 pt-4 border-t border-slate-700 text-center text-[#d4af37]/60 text-sm font-serif italic shrink-0" style={{ textShadow: '1px 1px 0px black' }}>
-                ״כי מציון תצא תורה״
+                <div className="mt-6 pt-6 border-t border-[#d4af37]/30 text-center text-[#d4af37] text-xl font-serif italic shrink-0" style={{ textShadow: '2px 2px 4px black' }}>
+                    ״כי מציון תצא תורה״
+                </div>
             </div>
         </aside>
     );
