@@ -107,8 +107,7 @@ export const useHebcal = () => {
 
     useEffect(() => {
         calculateData();
-        const interval = setInterval(calculateData, 60 * 60 * 1000); // Update hourly
-        return () => clearInterval(interval);
+        // Recalculation happens on page reload (Sun/Wed)
     }, []);
 
     return { zmanim, hebrewDate, shabbatInfo, loading };

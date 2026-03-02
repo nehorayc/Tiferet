@@ -14,14 +14,36 @@ export const SlideCard = ({ message }) => {
     const cardBaseClass = "frame-message flex flex-col items-center justify-center h-[95%] w-[95%] text-center p-32 relative overflow-hidden";
 
     const renderContent = () => {
+        const titleLength = title?.length || 0;
+        const bodyLength = body?.length || 0;
+        const totalLength = titleLength + bodyLength;
+
+        // Dynamic font classes based on length
+        const getTitleClass = (baseClass) => {
+            if (totalLength > 150) return "text-6xl";
+            if (totalLength > 80) return "text-7xl";
+            return baseClass;
+        };
+
+        const getBodyClass = (baseClass) => {
+            if (totalLength > 250) return "text-4xl";
+            if (totalLength > 150) return "text-5xl";
+            if (totalLength > 80) return "text-6xl";
+            return baseClass;
+        };
+
         switch (type) {
             case 'info':
                 return (
                     <div className="flex items-center justify-center w-full h-full">
                         <div className={cardBaseClass}>
-                            <Info size={120} className="text-[#d4af37] mb-12 drop-shadow-md" />
-                            <h1 className="text-9xl font-black mb-14 text-white font-serif drop-shadow-lg leading-tight">{title}</h1>
-                            <p className="text-7xl leading-tight text-slate-200 font-serif font-semibold drop-shadow-sm">{body}</p>
+                            <Info size={100} className="text-[#d4af37] mb-10 drop-shadow-md" />
+                            <h1 className={cn("font-black mb-10 text-white font-serif drop-shadow-lg leading-tight", getTitleClass("text-8xl"))}>
+                                {title}
+                            </h1>
+                            <p className={cn("leading-tight text-slate-200 font-serif font-semibold drop-shadow-sm", getBodyClass("text-6xl"))}>
+                                {body}
+                            </p>
                         </div>
                     </div>
                 );
@@ -29,10 +51,13 @@ export const SlideCard = ({ message }) => {
                 return (
                     <div className="flex items-center justify-center w-full h-full">
                         <div className={cardBaseClass}>
-                            {/* Gold/White theme for alerts instead of red */}
-                            <TriangleAlert size={150} className="text-[#d4af37] mb-12 animate-bounce drop-shadow-lg" />
-                            <h1 className="text-[10rem] font-black mb-14 text-white font-serif uppercase tracking-widest decoration-4 underline decoration-[#d4af37]/50 drop-shadow-lg leading-none">{title}</h1>
-                            <p className="text-8xl font-bold text-slate-100 drop-shadow-md">{body}</p>
+                            <TriangleAlert size={120} className="text-[#d4af37] mb-10 animate-bounce drop-shadow-lg" />
+                            <h1 className={cn("font-black mb-10 text-white font-serif uppercase tracking-widest decoration-4 underline decoration-[#d4af37]/50 drop-shadow-lg leading-none", getTitleClass("text-9xl"))}>
+                                {title}
+                            </h1>
+                            <p className={cn("font-bold text-slate-100 drop-shadow-md", getBodyClass("text-7xl"))}>
+                                {body}
+                            </p>
                         </div>
                     </div>
                 );
@@ -40,11 +65,13 @@ export const SlideCard = ({ message }) => {
                 return (
                     <div className="flex items-center justify-center w-full h-full">
                         <div className={cardBaseClass}>
-                            <Wine size={160} className="text-[#d4af37] mb-12 drop-shadow-xl" />
-                            <h1 className="text-[11rem] font-serif font-black mb-14 text-[#d4af37] drop-shadow-2xl leading-none text-shadow-heavy">
+                            <Wine size={140} className="text-[#d4af37] mb-10 drop-shadow-xl" />
+                            <h1 className={cn("font-serif font-black mb-10 text-[#d4af37] drop-shadow-2xl leading-none text-shadow-heavy", getTitleClass("text-9xl"))}>
                                 {title}
                             </h1>
-                            <p className="text-8xl text-white font-serif font-medium italic drop-shadow-lg">{body}</p>
+                            <p className={cn("text-white font-serif font-medium italic drop-shadow-lg", getBodyClass("text-7xl"))}>
+                                {body}
+                            </p>
                         </div>
                     </div>
                 );
@@ -52,10 +79,14 @@ export const SlideCard = ({ message }) => {
                 return (
                     <div className="flex items-center justify-center w-full h-full">
                         <div className={cardBaseClass}>
-                            <Flame size={120} className="text-orange-400 mb-12 animate-pulse drop-shadow-lg" />
-                            <h1 className="text-8xl font-bold mb-10 text-slate-300 font-serif italic">לעילוי נשמת</h1>
-                            <h2 className="text-9xl font-black mb-12 text-white border-b-6 border-[#d4af37]/30 pb-8 px-20 font-serif tracking-wide leading-tight">{title}</h2>
-                            <p className="text-7xl text-slate-200 italic font-serif leading-relaxed drop-shadow-sm">{body}</p>
+                            <Flame size={100} className="text-orange-400 mb-10 animate-pulse drop-shadow-lg" />
+                            <h1 className="text-7xl font-bold mb-8 text-slate-300 font-serif italic">לעילוי נשמת</h1>
+                            <h2 className={cn("font-black mb-10 text-white border-b-6 border-[#d4af37]/30 pb-6 px-16 font-serif tracking-wide leading-tight", getTitleClass("text-8xl"))}>
+                                {title}
+                            </h2>
+                            <p className={cn("text-slate-200 italic font-serif leading-relaxed drop-shadow-sm", getBodyClass("text-6xl"))}>
+                                {body}
+                            </p>
                         </div>
                     </div>
                 );
@@ -63,9 +94,14 @@ export const SlideCard = ({ message }) => {
                 return (
                     <div className="flex items-center justify-center w-full h-full">
                         <div className={cardBaseClass}>
-                            <Scroll size={120} className="text-[#d4af37] mb-12 drop-shadow-md" />
-                            <h1 className="text-9xl font-bold mb-14 text-white font-serif underline decoration-double decoration-[#d4af37]/50 leading-tight">{title}</h1>
-                            <div className="w-full max-w-6xl text-7xl text-slate-100 font-serif leading-loose drop-shadow-sm whitespace-pre-line">
+                            <Scroll size={100} className="text-[#d4af37] mb-10 drop-shadow-md" />
+                            <h1 className={cn("font-bold mb-10 text-white font-serif underline decoration-double decoration-[#d4af37]/50 leading-tight", getTitleClass("text-8xl"))}>
+                                {title}
+                            </h1>
+                            <div className={cn(
+                                "w-full max-w-6xl font-serif leading-tight drop-shadow-sm whitespace-pre-line text-slate-200",
+                                getBodyClass("text-7xl")
+                            )}>
                                 {body}
                             </div>
                         </div>

@@ -10,7 +10,7 @@ export const AzkarotSidebar = ({ azkarot, hebrewDate, loading }) => {
         if (!container) return;
 
         let scrollAmount = 0;
-        const speed = 0.4; // Slightly slower than Zmanim for readability
+        const speed = 1.0; // Increased speed for better readability
 
         const scrollInterval = setInterval(() => {
             if (container.scrollHeight <= container.clientHeight) return;
@@ -72,42 +72,63 @@ export const AzkarotSidebar = ({ azkarot, hebrewDate, loading }) => {
     };
 
     return (
-        <aside style={{ width: '25%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', backgroundColor: 'transparent' }}>
+        <aside className="w-full h-full flex flex-col overflow-hidden bg-transparent">
             <div className="relative z-10 flex flex-col h-full p-8">
 
                 {/* Header Section */}
                 <div className="flex-1 overflow-hidden relative" ref={scrollContainerRef}>
-                    <h3 className="text-3xl font-bold text-[#d4af37] mb-6 text-center border-b border-[#d4af37]/50 pb-4 flex items-center justify-center gap-3 sticky top-0 z-10 py-2"
-                        style={{ backgroundColor: 'rgba(20, 20, 40, 0.95)', borderRadius: '8px', marginBottom: '16px' }}>
-                        <ScrollText size={32} />
-                        <span>נזכור וננציח - {hebrewDate?.monthName}</span>
+                    <h3 className="text-4xl font-black text-[#d4af37] mb-8 text-center border-b-2 border-[#d4af37]/50 pb-6 flex items-center justify-center gap-4 sticky top-0 z-10 py-4"
+                        style={{ backgroundColor: 'rgba(20, 20, 40, 0.98)', borderRadius: '12px', marginBottom: '20px' }}>
+                        <ScrollText size={52} />
+                        <span>לעילוי נשמת</span>
                     </h3>
 
                     {loading ? (
-                        <div className="text-[#d4af37]/60 animate-pulse text-center font-serif italic text-2xl">טוען נתונים...</div>
+                        <div className="text-[#d4af37]/60 animate-pulse text-center font-serif italic text-3xl">טוען נתונים...</div>
                     ) : currentMonthAzkarot.length === 0 ? (
-                        <div className="text-white/40 text-center italic text-xl mt-10">אין אזכרות רשומות לחודש זה</div>
+                        <div className="text-white/40 text-center italic text-2xl mt-10">אין אזכרות לחודש זה</div>
                     ) : (
-                        <div className="space-y-3 pb-4">
-                            {currentMonthAzkarot.map((item, idx) => (
-                                <div key={idx} className="flex justify-between items-center p-5 border border-white/5 hover:border-[#d4af37]/60 transition-all duration-300"
-                                    style={{
-                                        backgroundColor: 'rgba(20, 20, 40, 0.9)',
-                                        borderRadius: '8px',
-                                        marginBottom: '6px'
-                                    }}>
-                                    <div className="flex flex-col items-start gap-1">
-                                        <span className="text-2xl text-white font-serif font-bold leading-tight">{item.name || item.Name}</span>
-                                        <span className="text-lg text-[#d4af37] font-serif italic">לעילוי נשמת</span>
-                                    </div>
-                                    <div className="flex flex-col items-end min-w-[120px]">
-                                        <div className="text-3xl font-bold text-white font-serif border-b border-[#d4af37]/30 pb-1 mb-1">
-                                            {toGematriya(item.day || item.Day)} {item.month || item.Month}
+                        <div className="space-y-4 pb-6">
+                            {currentMonthAzkarot.map((item, idx) => {
+                                const name = item.Name || item.name;
+                                const parentName = item['Mother/father_name'] || item.parent_name;
+                                const day = item.Day || item.day;
+                                const month = item.Month || item.month;
+                                const year = item.Death_year || item.death_year;
+
+                                return (
+                                    <div key={idx} className="flex flex-col items-center p-5 border-2 border-white/5 hover:border-[#d4af37]/60 transition-all duration-300 shadow-xl text-center"
+                                        style={{
+                                            backgroundColor: 'rgba(20, 20, 40, 0.95)',
+                                            borderRadius: '20px',
+                                            marginBottom: '10px'
+                                        }}>
+                                        {/* Line 1 & 2: Names */}
+                                        <div className="flex flex-col items-center mb-2">
+                                            <Flame size={24} className="text-[#d4af37] animate-pulse mb-1" />
+                                            <h4 className="text-3xl font-black text-white leading-tight">
+                                                {name}
+                                            </h4>
+                                            {parentName && (
+                                                <span className="text-xl text-slate-300 font-serif">
+                                                    {parentName}
+                                                </span>
+                                            )}
                                         </div>
-                                        <span className="text-xs text-white/40 font-serif uppercase tracking-widest">תאריך פטירה</span>
+
+                                        {/* Line 3: Date & Year */}
+                                        <div className="w-1/2 h-px bg-gradient-to-r from-transparent via-[#d4af37]/30 to-transparent mb-2"></div>
+                                        <div className="text-2xl font-black text-white font-serif flex items-center justify-center gap-3">
+                                            <span>{toGematriya(day)} {month}</span>
+                                            {year && (
+                                                <span className="text-xl text-[#d4af37] font-black tracking-tighter opacity-90">
+                                                    {year}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

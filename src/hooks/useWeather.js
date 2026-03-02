@@ -23,8 +23,7 @@ export const useWeather = () => {
 
     useEffect(() => {
         fetchWeather();
-        const interval = setInterval(fetchWeather, 30 * 60 * 1000); // 30 mins
-        return () => clearInterval(interval);
+        // Recalculation happens on page reload (Sun/Wed)
     }, []);
 
     return weather;

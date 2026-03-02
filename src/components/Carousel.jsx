@@ -28,30 +28,7 @@ export const Carousel = ({ messages, duration = 15 }) => {
     return (
         <div className="w-full h-full relative overflow-hidden bg-transparent">
 
-            <SlideCard key={currentMessage.id} message={currentMessage} />
-
-            {/* Slide Navigator dots */}
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-6 z-10">
-                {messages.map((_, idx) => (
-                    <div
-                        key={idx}
-                        className={`w-6 h-6 rounded-full transition-all duration-500 shadow-lg border border-black/20 ${idx === currentIndex
-                                ? 'bg-[#d4af37] scale-125'
-                                : 'bg-white/50 hover:bg-white/80'
-                            }`}
-                        style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
-                    />
-                ))}
-            </div>
-
-            {/* Slide duration progress bar */}
-            <div className="absolute bottom-0 right-0 left-0 h-2 bg-slate-800">
-                <div
-                    key={currentIndex}
-                    className="h-full bg-blue-500/50 animate-progress"
-                    style={{ animationDuration: `${duration}s` }}
-                />
-            </div>
+            <SlideCard key={currentIndex} message={currentMessage} />
         </div>
     );
 };

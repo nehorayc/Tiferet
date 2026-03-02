@@ -2,7 +2,25 @@ import { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import { isWithinInterval, parse, startOfDay } from 'date-fns';
 
-const SHEET_ID = '1vYXNWvbean4RVsGU2FmO93cF0nLtKeAotGs1bz3SBlY';
+// Mapping of shul keys to their respective Google Sheet IDs
+const SHUL_SHEETS = {
+    tiferet: '1vYXNWvbean4RVsGU2FmO93cF0nLtKeAotGs1bz3SBlY',
+    // Add other synagogues here, e.g.:
+    // or_chaim: 'ANOTHER_SHEET_ID_HERE',
+};
+
+// Function to determine which sheet to load based on the URL (?shul=xyz)
+const getSheetId = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shulParam = urlParams.get('shul')?.toLowerCase();
+
+    // Return the matching sheet ID, or default to 'tiferet'
+    return SHUL_SHEETS[shulParam] || SHUL_SHEETS['tiferet'];
+};
+
+const SHEET_ID = getSheetId();
+const CACHE_KEY = `cached_data_${SHEET_ID}`;
+
 const getGvizUrl = (sheetName) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
 
 export const useGoogleSheets = () => {
@@ -14,7 +32,7 @@ export const useGoogleSheets = () => {
         try {
             // Fetch Settings
             const settingsResponse = await fetch(getGvizUrl('Settings'));
-            if (!settingsResponse.ok) throw new Error('Settings check failed. Make sure the sheet is shared with "Anyone with the link"');
+            if (!settingsResponse.ok) throw new Error('Settings check failed');
             const settingsCsv = await settingsResponse.text();
             const settingsParsed = Papa.parse(settingsCsv, { header: true }).data;
 
@@ -43,6 +61,18 @@ export const useGoogleSheets = () => {
                 console.warn('Azkarot sheet not found or inaccessible');
             }
 
+            // Fetch Zmanim (Prayer Times)
+            let zmanimSheetData = [];
+            try {
+                const zmanimResponse = await fetch(getGvizUrl('Zmanim'));
+                if (zmanimResponse.ok) {
+                    const zmanimCsv = await zmanimResponse.text();
+                    zmanimSheetData = Papa.parse(zmanimCsv, { header: true }).data;
+                }
+            } catch (e) {
+                console.warn('Zmanim sheet not found or inaccessible');
+            }
+
             const today = startOfDay(new Date());
 
             const filteredMessages = messagesParsed.filter(msg => {
@@ -63,23 +93,47 @@ export const useGoogleSheets = () => {
                 }
             });
 
-            setData({
+            const newData = {
                 settings: settingsMap,
                 messages: filteredMessages,
-                azkarot: azkarotData
-            });
+                azkarot: azkarotData,
+                zmanimSheet: zmanimSheetData
+            };
+
+            setData(newData);
+            localStorage.setItem(CACHE_KEY, JSON.stringify(newData));
             setLoading(false);
+            setError(null);
         } catch (err) {
-            console.error('Error fetching sheets:', err);
+            console.error('Error fetching sheets, checking cache:', err);
+
+            // If we already have data in state (from a previous successful fetch or initial cache load), 
+            // just keep using it and don't show the error screen.
+            if (data.messages?.length > 0 || data.settings?.ShulName) {
+                console.log('Fetch failed but app is running with existing/cached data.');
+                setLoading(false);
+                return;
+            }
+
             setError(err);
             setLoading(false);
         }
     };
 
     useEffect(() => {
+        // Initial load from cache to prevent blank screen if offline on boot
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+            try {
+                setData(JSON.parse(cached));
+                setLoading(false);
+            } catch (e) {
+                console.error('Failed to parse cached data');
+            }
+        }
+
         fetchData();
-        const interval = setInterval(fetchData, 5 * 60 * 1000); // 5 minutes
-        return () => clearInterval(interval);
+        // Recalculation happens on page reload (Sun/Wed)
     }, []);
 
     return { data, loading, error, refetch: fetchData };

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useGoogleSheets } from './hooks/useGoogleSheets';
 import { useHebcal } from './hooks/useHebcal'; // Import hook here
 import { Sidebar } from './components/Sidebar';
@@ -10,17 +10,52 @@ import bgImage from './assets/bg_synagogue.png';
 
 
 import { AzkarotSidebar } from './components/AzkarotSidebar';
-import { Ticker } from './components/Ticker';
 
 function App() {
   const { data, loading: sheetLoading, error } = useGoogleSheets();
   const { zmanim, hebrewDate, shabbatInfo, loading: hebcalLoading } = useHebcal(); // Execute hook
+
+  // --- SCHEDULED AUTO-RELOAD (Sun & Wed Midnight) ---
+  React.useEffect(() => {
+    const getNextMidnight = (dayOfWeek) => {
+      const now = new Date();
+      const result = new Date(now);
+      result.setDate(now.getDate() + (dayOfWeek + 7 - now.getDay()) % 7);
+      result.setHours(0, 0, 0, 0); // 00:00:00
+
+      // If the resulting time is in the past (e.g. today is the day but 00:00 passed), add 7 days
+      if (result <= now) {
+        result.setDate(result.getDate() + 7);
+      }
+      return result;
+    };
+
+    const nextSunday = getNextMidnight(0); // 0 = Sunday
+    const nextWednesday = getNextMidnight(3); // 3 = Wednesday
+
+    // Choose the soonest one
+    const nextReload = nextSunday < nextWednesday ? nextSunday : nextWednesday;
+    const timeToReload = nextReload.getTime() - new Date().getTime();
+
+    console.log(`System scheduled to reload at: ${nextReload.toLocaleString()} (in ${Math.round(timeToReload / 1000 / 3600)} hours)`);
+
+    const timer = setTimeout(() => {
+      window.location.reload();
+    }, timeToReload);
+
+    return () => clearTimeout(timer);
+  }, []);
+  // --------------------------------------------------
 
   const slideDuration = useMemo(() => {
     return parseInt(data.settings?.SlideDuration) || 15;
   }, [data.settings?.SlideDuration]);
 
   const shulName = data.settings?.ShulName || 'תפארת ישראל';
+
+  useEffect(() => {
+    document.title = `בית כנסת ${shulName} - לוח דיגיטלי`;
+  }, [shulName]);
 
   // Combine loading states slightly or just show sheet loading which is critical
   if (sheetLoading) {
@@ -55,7 +90,7 @@ function App() {
         overflow: 'hidden',
         direction: 'rtl',
         backgroundImage: `url(${bgImage})`,
-        backgroundSize: '100% 100%',
+        backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
@@ -64,20 +99,21 @@ function App() {
 
       {/* Main Body Area: Flex Row [Azkarot(R) | Carousel(C) | Zmanim(L)] */}
       <div className="flex flex-1 overflow-hidden relative" style={{ backgroundColor: 'transparent' }}>
-        {/* 1. Azkarot Sidebar (Right) */}
-        <AzkarotSidebar azkarot={data.azkarot} hebrewDate={hebrewDate} loading={sheetLoading} />
+        {/* 1. Right Sidebar (Azkarot) - FIXED WIDTH for 1080p readability */}
+        <div className="w-[420px] flex-shrink-0">
+          <AzkarotSidebar azkarot={data.azkarot} hebrewDate={hebrewDate} loading={sheetLoading} />
+        </div>
 
         {/* 2. Main Carousel (Center) - Expanded */}
-        <main className="flex-[2] flex items-center justify-center relative p-4">
+        <main className="flex-1 flex items-center justify-center relative px-8 py-4">
           <Carousel messages={data.messages} duration={slideDuration} />
         </main>
 
-        {/* 3. Zmanim Sidebar (Left) */}
-        <Sidebar zmanim={zmanim} hebrewDate={hebrewDate} loading={hebcalLoading} />
+        {/* 3. Left Sidebar (Zmanim) - FIXED WIDTH for 1080p readability */}
+        <div className="w-[450px] flex-shrink-0">
+          <Sidebar zmanimSheet={data.zmanimSheet} loading={sheetLoading} />
+        </div>
       </div>
-
-      {/* 4. Scrolling News Ticker (Bottom) */}
-      <Ticker messages={data.messages} />
     </div>
   );
 }
