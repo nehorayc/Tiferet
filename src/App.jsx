@@ -1,9 +1,10 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useGoogleSheets } from './hooks/useGoogleSheets';
 import { useHebcal } from './hooks/useHebcal'; // Import hook here
 import { Sidebar } from './components/Sidebar';
 import { Carousel } from './components/Carousel';
 import { Header } from './components/Header'; // New Header
+import { Ticker } from './components/Ticker'; // The Zmanim Ticker
 import { Loader2 } from 'lucide-react';
 
 import bgImage from './assets/bg_synagogue.png';
@@ -13,7 +14,11 @@ import { AzkarotSidebar } from './components/AzkarotSidebar';
 
 function App() {
   const { data, loading: sheetLoading, error } = useGoogleSheets();
-  const { zmanim, hebrewDate, shabbatInfo, loading: hebcalLoading } = useHebcal(); // Execute hook
+
+  // Extract the preferred halachic method from settings (GRA vs MGA vs OHR)
+  const shulMethodRaw = data.settings?.ShulMethod?.toUpperCase();
+  const shulMethod = ['MGA', 'OHR'].includes(shulMethodRaw) ? shulMethodRaw : 'GRA';
+  const { zmanim, hebrewDate, shabbatInfo, loading: hebcalLoading } = useHebcal(shulMethod);
 
   // --- SCHEDULED AUTO-RELOAD (Sun & Wed Midnight) ---
   React.useEffect(() => {
@@ -52,10 +57,6 @@ function App() {
   }, [data.settings?.SlideDuration]);
 
   const shulName = data.settings?.ShulName || 'תפארת ישראל';
-
-  useEffect(() => {
-    document.title = `בית כנסת ${shulName} - לוח דיגיטלי`;
-  }, [shulName]);
 
   // Combine loading states slightly or just show sheet loading which is critical
   if (sheetLoading) {
@@ -114,6 +115,9 @@ function App() {
           <Sidebar zmanimSheet={data.zmanimSheet} loading={sheetLoading} />
         </div>
       </div>
+
+      {/* Bottom Ticker for Zmanim */}
+      <Ticker zmanim={zmanim} />
     </div>
   );
 }

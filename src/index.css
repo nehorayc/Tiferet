@@ -125,24 +125,18 @@ aside {
   animation: progress linear forwards;
 }
 
-@keyframes tickerAnimation {
+@keyframes ticker-scroll {
   0% {
-    transform: translateX(-100%);
+    transform: translateX(0);
   }
 
   100% {
-    transform: translateX(100%);
+    transform: translateX(50%);
   }
 }
 
-.ticker-wrap {
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-}
-
-.ticker-item {
-  display: inline-block;
-  white-space: nowrap;
-  animation: tickerAnimation 30s linear infinite;
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 120s linear infinite;
 }
