@@ -7,8 +7,44 @@ function cn(...inputs) {
     return twMerge(clsx(inputs));
 }
 
+/**
+ * Converts Google Drive share links to direct image URLs
+ */
+const getDirectImageUrl = (url) => {
+    if (!url || url === '#N/A' || url === 'undefined' || url.trim() === '') return null;
+
+    // Detect shared Google Drive links
+    if (url.includes('drive.google.com') || url.includes('docs.google.com/open')) {
+        let fileId = '';
+
+        // Match different types of drive URLs to find the ID
+        const patterns = [
+            /\/d\/([^/]+)\//,           // file/d/ID/view
+            /id=([^&]+)/,               // ?id=ID
+            /open\?id=([^&]+)/          // open?id=ID
+        ];
+
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match && match[1]) {
+                fileId = match[1];
+                break;
+            }
+        }
+
+        if (fileId) {
+            // This lh3 format is the most reliable way to show Drive images in <img> tags
+            return `https://lh3.googleusercontent.com/d/${fileId}`;
+        }
+    }
+
+    return url;
+};
+
 export const SlideCard = ({ message }) => {
     const { title, body, type, imageUrl } = message;
+    const processedImageUrl = getDirectImageUrl(imageUrl);
+    const cleanTitle = title === '.' ? '' : title;
 
     // Base container class for all non-image slides
     const cardBaseClass = "frame-message flex flex-col items-center justify-center h-[95%] w-[95%] text-center p-32 relative overflow-hidden";
@@ -110,10 +146,10 @@ export const SlideCard = ({ message }) => {
             case 'image':
                 return (
                     <div className="absolute inset-0 w-full h-full overflow-hidden">
-                        {imageUrl ? (
+                        {processedImageUrl ? (
                             <img
-                                src={imageUrl}
-                                alt={title}
+                                src={processedImageUrl}
+                                alt={cleanTitle}
                                 className="w-full h-full object-cover"
                                 onError={(e) => { e.target.src = 'https://via.placeholder.com/1920x1080?text=תמונה+לא+נמצאה'; }}
                             />
@@ -122,6 +158,40 @@ export const SlideCard = ({ message }) => {
                                 <ImageIcon size={100} className="text-white/20" />
                             </div>
                         )}
+                    </div>
+                );
+            case 'image_text':
+                return (
+                    <div className="flex items-center justify-center w-full h-full p-8">
+                        <div className={cn("frame-message w-full h-full flex flex-col overflow-hidden p-0", "bg-slate-900/20")}>
+                            {/* Image Area */}
+                            <div className="flex-[3] w-full relative overflow-hidden bg-black/10">
+                                {processedImageUrl ? (
+                                    <img
+                                        src={processedImageUrl}
+                                        alt={cleanTitle}
+                                        className="w-full h-full object-contain"
+                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/1920x1080?text=תמונה+לא+נמצאה'; }}
+                                    />
+                                ) : (
+                                    <div className="flex items-center justify-center w-full h-full">
+                                        <ImageIcon size={100} className="text-white/20" />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Text Area */}
+                            <div className="flex-1 w-full flex flex-col items-center justify-center px-16 text-center border-t-2 border-[#d4af37]/20 bg-gradient-to-b from-slate-900/40 to-slate-900/60">
+                                {cleanTitle && (
+                                    <h1 className="text-6xl font-black text-[#d4af37] mb-4 font-serif drop-shadow-lg">
+                                        {cleanTitle}
+                                    </h1>
+                                )}
+                                <p className="text-5xl text-white font-serif font-semibold leading-tight drop-shadow-md">
+                                    {body}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 );
             default:
